@@ -17,4 +17,7 @@ const (
 	MaxGoroutines   = 10
 	MaxOpenConns    = 100
 	ConnMaxLifetime = 10 * time.Second
+
+	PhoneRegexp  = "^1[345789]{1}\\d{9}$"
+	CardIdRegexp = "(^\\d{15}$)|(^\\d{18}$)|(^\\d{17}(\\d|X|x)$)"
 )

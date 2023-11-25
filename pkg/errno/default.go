@@ -24,4 +24,9 @@ var (
 	//
 	NotExistError = NewErrNo(NotExistErrorCode, "record not exist")
 	ExistError    = NewErrNo(ExistErrorCode, "record have existed")
+	FileError     = NewErrNo(FileErrorCode, "file error")
+	UploadError   = NewErrNo(UploadErrorCode, "upload error")
+	//
+	DealError = NewErrNo(DealErrorCode, "have deal")
+	WaitError = NewErrNo(WaitErrorCode, "please wait the park_space")
 )

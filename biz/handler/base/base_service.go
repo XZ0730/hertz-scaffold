@@ -6,8 +6,13 @@ import (
 	"context"
 
 	base "github.com/XZ0730/hertz-scaffold/biz/model/base"
+	"github.com/XZ0730/hertz-scaffold/biz/pack"
+	"github.com/XZ0730/hertz-scaffold/biz/service"
+	"github.com/XZ0730/hertz-scaffold/pkg/errno"
+	"github.com/XZ0730/hertz-scaffold/pkg/utils"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/cloudwego/kitex/pkg/klog"
 )
 
 // Ping .
@@ -31,14 +36,21 @@ func Ping(ctx context.Context, c *app.RequestContext) {
 func Register(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req base.RegisterReq
+	resp := new(base.BaseResponse)
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		pack.PackBase(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg)
+		return
+	}
+	if len(req.GetUsername()) < 5 || len(req.GetUsername()) > 10 {
+		pack.PackBase(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg)
+		return
+	} else if len(req.GetPassword()) < 5 || len(req.GetPassword()) > 10 {
+		pack.PackBase(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg)
 		return
 	}
 
-	resp := new(base.BaseResponse)
-
+	service.NewUserService().Register(&req)
 	c.JSON(consts.StatusOK, resp)
 }
 
@@ -47,13 +59,141 @@ func Register(ctx context.Context, c *app.RequestContext) {
 func Login(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req base.LoginRequest
+	resp := new(base.LoginResponse)
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		c.String(consts.StatusBadRequest, err.Error())
+		pack.PackLogin(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg, "")
+		c.JSON(consts.StatusOK, resp)
 		return
 	}
+	code, msg, token := service.NewUserService().Login(&req)
+	if code != 0 {
+		pack.PackLogin(resp, code, msg, "")
+		c.JSON(consts.StatusOK, resp)
+		return
+	}
+	pack.PackLogin(resp, code, msg, token)
+	c.JSON(consts.StatusOK, resp)
+}
 
-	resp := new(base.LoginResponse)
+// PutUserInfo .
+// @router /auth/user [PUT]
+func PutUserInfo(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req base.UpdateUserInfoReq
+	resp := new(base.BaseResponse)
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.PackBase(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg)
+		c.JSON(consts.StatusOK, resp)
+		return
+	}
+	if req.GetCardID() != "" {
+		if !utils.CheckCardID(req.GetCardID()) {
+			klog.Error("[check] card id error")
+			pack.PackBase(resp, 262, "[check] card id error")
+			c.JSON(consts.StatusOK, resp)
+			return
+		}
+	}
+	if req.GetPhone() != "" {
+		if !utils.CheckPhone(req.GetPhone()) {
+			klog.Error("[check] phone number error")
+			pack.PackBase(resp, 263, "[check] phone number error")
+			c.JSON(consts.StatusOK, resp)
+			return
+		}
+	}
+	token := c.GetHeader("token")
+	claim, _ := utils.CheckToken(string(token))
+	code, msg := service.NewUserService().UpdateUserInfo(claim.UserId, &req)
+	pack.PackBase(resp, code, msg)
+	c.JSON(consts.StatusOK, resp)
+}
+
+// GetMyVehicles .
+// @router /auth/user/vehicles [GET]
+func GetMyVehicles(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req base.BaseRequest
+	resp := new(base.GetMyVehicleResponse)
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.PackVehicles(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg, nil)
+		c.JSON(consts.StatusOK, resp)
+		return
+	}
+	token := c.GetHeader("token")
+	claim, _ := utils.CheckToken(string(token))
+	code, msg, vm := service.NewUserService().GetMyVehicles(claim.UserId)
+	pack.PackVehicles(resp, code, msg, vm)
+	c.JSON(consts.StatusOK, resp)
+}
+
+// GetIdleParkSpace .
+// @router /auth/user/park_space [GET]
+func GetIdleParkSpace(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req base.GetIdleParkSpaceReq
+	resp := new(base.GetIdleParkSpaceResponse)
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.PackIdleParkSpace(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg, nil)
+		c.JSON(consts.StatusOK, resp)
+		return
+	}
+	code, msg, psk := service.NewUserService().GetIdleParkSpace(req.GetGarageID())
+	pack.PackIdleParkSpace(resp, code, msg, psk)
+
+	c.JSON(consts.StatusOK, resp)
+}
+
+// PostVehicleAudit .
+// @router /auth/user/audit [POST]
+func PostVehicleAudit(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req base.PostVehicleAuditReq
+	resp := new(base.BaseResponse)
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.PackBase(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg)
+		c.JSON(consts.StatusOK, resp)
+		return
+	}
+	vn_image, err := c.FormFile("vn_image")
+	if err != nil {
+		pack.PackBase(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg)
+		c.JSON(consts.StatusOK, resp)
+		return
+	}
+	token := c.GetHeader("token")
+	claim, _ := utils.CheckToken(string(token))
+	code, msg := service.NewUserService().PostVehicleAudit(claim.UserId, &req, vn_image)
+	pack.PackBase(resp, code, msg)
+	c.JSON(consts.StatusOK, resp)
+}
+
+// Park .
+// @router /auth/user/park [POST]
+func Park(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req base.ParkRequest
+	err = c.BindAndValidate(&req)
+	resp := new(base.ParkResponse)
+	if err != nil {
+		pack.PackPark(resp, errno.ParamError.ErrorCode, errno.ParamError.ErrorMsg, nil)
+		c.JSON(consts.StatusOK, resp)
+		return
+	}
+	token := c.GetHeader("token")
+	claim, _ := utils.CheckToken(string(token))
+	if req.GetType() == 1 {
+		code, msg, psk := service.NewUserService().Park(claim.UserId, &req)
+		pack.PackPark(resp, code, msg, psk)
+	} else if req.GetType() == 0 {
+		code, msg := service.NewUserService().LeavePark(claim.UserId, &req)
+		pack.PackPark(resp, code, msg, nil)
+	}
 
 	c.JSON(consts.StatusOK, resp)
 }

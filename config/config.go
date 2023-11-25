@@ -12,6 +12,7 @@ var (
 	Server    *server
 	Mysql     *mySQL
 	Snowflake *snowflake
+	QSS       *qss
 	//Etcd          *etcd
 	//RabbitMQ      *rabbitMQ
 	//Redis         *redis
@@ -59,6 +60,8 @@ func configMapping(srv string) {
 	Server.Secret = []byte(runtime_viper.GetString("server.jwt-secret"))
 
 	Mysql = &c.MySQL
+	QSS = &c.QSS
+
 	// RabbitMQ = &c.RabbitMQ
 	// Redis = &c.Redis
 	// OSS = &c.OSS

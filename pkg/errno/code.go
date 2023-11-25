@@ -27,4 +27,8 @@ const (
 	UpdateErrorCode   = 23005
 	NotExistErrorCode = 23006
 	ExistErrorCode    = 23007
+	FileErrorCode     = 23008
+	UploadErrorCode   = 23009
+	DealErrorCode     = 23010
+	WaitErrorCode     = 23011
 )

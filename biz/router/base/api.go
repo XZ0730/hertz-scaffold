@@ -28,5 +28,13 @@ func Register(r *server.Hertz) {
 			_register := _auth.Group("/register", _registerMw()...)
 			_register.POST("/pwd", append(_register0Mw(), base.Register)...)
 		}
+		{
+			_user := _auth.Group("/user", _userMw()...)
+			_user.PUT("/", append(_putuserinfoMw(), base.PutUserInfo)...)
+			_user.POST("/audit", append(_postvehicleauditMw(), base.PostVehicleAudit)...)
+			_user.POST("/park", append(_parkMw(), base.Park)...)
+			_user.GET("/park_space", append(_getidleparkspaceMw(), base.GetIdleParkSpace)...)
+			_user.GET("/vehicles", append(_getmyvehiclesMw(), base.GetMyVehicles)...)
+		}
 	}
 }

@@ -30,11 +30,19 @@ type redis struct {
 	Password string
 }
 
+type qss struct {
+	AccessKey   string `mapstructure:"access-key"`
+	SerectKey   string `mapstructure:"serect-key"`
+	QiniuServer string `mapstructure:"qiniu-server"`
+	Bucket      string
+}
+
 type config struct {
 	Server    server
 	Snowflake snowflake
 	MySQL     mySQL
 	Redis     redis
+	QSS       qss
 	// Jaeger        jaeger
 	// Etcd          etcd
 	// RabbitMQ      rabbitMQ

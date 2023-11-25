@@ -17,11 +17,17 @@ snowflake:
 
 mysql:
   addr: 127.0.0.1:3306
-  database: account
+  database: garage
   username: root
   password: root
   charset: utf8mb4
 
+qss:
+  access-key: bvNjY2qeTRz1rNw9NfdEEFUV9yBRlDSfwoMtAWHB
+  serect-key: pcovzI0wcNQO_DUTVv97PpkrWqLxz7gmSJK0EluR
+  qiniu-server: s49neujkg.hn-bkt.clouddn.com/
+  bucket: suijiapp
+  
 # you need to complete this config to use video service
 # oss:
 #   endpoint:
